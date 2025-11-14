@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-1.0">
+    <title>مواعيد مستشفى تبارك للولادة و الأطفال</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font for better Arabic display -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800&display=swap');
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f0f4f8; /* Light gray background */
+            /* Add padding to the top of the body to prevent content from being hidden by the fixed header */
+            padding-top: 6rem; 
+        }
+        /* Custom scrollbar style for aesthetics */
+        .custom-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background-color: #312e81; /* primary-indigo */
+            border-radius: 10px;
+        }
+        .schedule-text {
+            /* Ensures schedule text is monospaced or clear */
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-indigo': '#312e81', /* Dark Indigo */
+                        'primary-teal': '#0d9488', /* Dark Teal */
+                        'light-blue': '#ecfdf5', /* Light Mint */
+                        'accent-orange': '#f97316',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="p-4 md:p-8">
+
+    <!-- Fixed Navigation Bar -->
+    <nav class="fixed top-0 right-0 left-0 bg-white shadow-lg z-50 p-4 border-b-4 border-primary-teal">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <!-- Hospital Name -->
+            <h1 class="text-lg font-extrabold text-primary-indigo md:text-xl">مستشفي تبارك فرع المريوطية</h1> 
+            <div class="flex space-x-4 space-x-reverse">
+                <!-- Home Button (Updated to be an actual link) -->
+                <a href="https://tabarakmariouteya.site/" 
+                   class="text-gray-700 hover:text-primary-teal font-semibold px-3 py-2 rounded-lg transition duration-150 flex items-center">
+                    الصفحة الرئيسة
+                </a>
+                <!-- Book Now Button (Prominent) -->
+                <a href="https://tabarakmariouteya.site/#page-5" 
+                   class="bg-primary-teal text-white hover:bg-primary-indigo font-bold px-4 py-2 rounded-lg shadow-md transition duration-150 transform hover:scale-105 flex items-center">
+                    احجز الآن
+                </a>
+                <!-- Contact Us Button (Updated to be an actual link) -->
+                <a href="https://tabarakmariouteya.site/#%D8%A7%D8%AA%D8%B5%D9%84-%D8%A8%D9%86%D8%A7"
+                   class="text-gray-700 hover:text-primary-teal font-semibold px-3 py-2 rounded-lg transition duration-150 flex items-center">
+                    اتصل بنا
+                </a>
+            </div>
+        </div>
+    </nav>
+
+
+    <div class="max-w-7xl mx-auto">
+        <!-- Filters Section (mt-4 added for spacing from fixed nav bar) -->
+        <div class="mt-4 mb-8 p-4 bg-white rounded-xl shadow-lg">
+            
+            <!-- Description -->
+            <p class="text-gray-600 mb-4 text-center text-lg font-medium">ابحث وتصفح مواعيد الأطباء بسهولة حسب التخصص واليوم.</p> 
+
+            <h2 class="text-xl font-bold mb-4 text-primary-indigo border-b pb-2">تصفية المواعيد</h2>
+            
+            <div class="flex flex-col md:flex-row gap-4 mb-4">
+                
+                <!-- Specialty Filter -->
+                <div class="flex-1">
+                    <label for="specialty-filter" class="block text-sm font-medium text-gray-700 mb-1">اختر التخصص:</label>
+                    <select id="specialty-filter" onchange="filterSchedule()" class="w-full p-2.5 border border-gray-300 bg-white rounded-lg shadow-sm focus:ring-primary-teal focus:border-primary-teal transition duration-150">
+                        <option value="all">كل التخصصات</option>
+                        <!-- Options filled by JS -->
+                    </select>
+                </div>
+
+                <!-- Search Input (Doctor Name) -->
+                <div class="flex-1">
+                    <label for="doctor-search" class="block text-sm font-medium text-gray-700 mb-1">البحث باسم الطبيب:</label>
+                    <input type="text" id="doctor-search" oninput="filterSchedule()" placeholder="ابحث بالاسم أو اللقب" class="w-full p-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-primary-teal focus:border-primary-teal transition duration-150">
+                </div>
+            </div>
+
+            <!-- Day Filter Indicator (Always shows current day) -->
+            <div id="day-filter-container">
+                <h3 id="day-filter-title" class="text-lg font-semibold mb-2 text-gray-800">عيادات اليوم:</h3>
+                <!-- No button will be generated here anymore -->
+            </div>
+        </div>
+
+        <!-- Schedule Results Container -->
+        <div id="schedule-results" class="space-y-4">
+            <!-- Clinic cards will be rendered here -->
+            <div class="text-center p-8 bg-white rounded-xl shadow-lg text-gray-500">
+                جارٍ تحميل جدول المواعيد...
+            </div>
+        </div>
+        
+        <!-- No Results Message -->
+        <div id="no-results" class="hidden text-center p-8 bg-yellow-100 rounded-xl shadow-lg border-r-4 border-yellow-500 mt-4">
+            <p class="text-lg font-semibold text-yellow-800">⚠️ عذراً، لم يتم العثور على مواعيد مطابقة لنتائج التصفية.</p>
+        </div>
+
+    </div>
+    
+    <!-- Footer Section -->
+    <footer class="mt-12 py-6 bg-primary-indigo text-white shadow-xl">
+        <div class="max-w-7xl mx-auto text-center text-sm">
+            <p class="mb-1">جميع الحقوق محفوظة © 2025 مستشفى تبارك للولادة والأطفال</p>
+            <p class="text-gray-400">Designed By Shady Yassin</p>
+        </div>
+    </footer>
+
+    <script>
+        // Data provided in the user's request, converted to a structured JavaScript array.
+        const clinicsData = [
+            { specialty: 'عيادات الأطفال', emoji: '👶', fee: '200', doctor: 'عبد الغفار طه (استشارى)', schedule: 'السبت، الإثنين، الثلاثاء، الأربعاء، الجمعة: 3 م - 9 م', notes: 'جروب واتساب متابعه حالات: 01557061070' },
+            { specialty: 'عيادات الأطفال', emoji: '👶', fee: '200', doctor: 'علاء السباعى (استشارى)', schedule: 'السبت، الأحد، الإثنين، الثلاثاء، الأربعاء، الخميس: 9 ص - 6 م', notes: '' },
+            { specialty: 'عيادات الأطفال', emoji: '👶', fee: '200', doctor: 'محمد نسيم (اخصائى)', schedule: 'السبت، الأحد، الإثنين، الثلاثاء، الأربعاء، الخميس: 9 ص - 3 م', notes: '' },
+            { specialty: 'عيادات الأطفال', emoji: '👶', fee: '200', doctor: 'علا عادل (استشارى)', schedule: 'الأحد: 8 م - 11 م، الإثنين: 5:30 م - 8:30 م، الأربعاء: 8 م - 11 م، الخميس: 4 م - 7 م', notes: '' },
+            { specialty: 'عيادات الأطفال', emoji: '👶', fee: '200', doctor: 'محمد فاروق (اخصائى)', schedule: 'الإثنين: 7 م - 11 م، الأربعاء: 7 م - 11 م، الجمعة: 6 م - 10 م', notes: '' },
+            { specialty: 'عيادات الأطفال', emoji: '👶', fee: '200', doctor: 'اسلام عبدالله (اخصائي)', schedule: 'السبت: 6 م - 8 م، الأربعاء: 5 م - 7 م', notes: '' },
+            { specialty: 'عيادات الأطفال', emoji: '👶', fee: '200', doctor: 'محمد ميبر (اخصائى)', schedule: 'الثلاثاء: 6 م - 9 م، الجمعة: 2 م - 5 م، الأحد: 6 م - 8 م، الخميس: 7 م - 10 م', notes: '' },
+            { specialty: 'عيادات الأطفال', emoji: '👶', fee: '200', doctor: 'محمد مختار (استشاري)', schedule: 'السبت، الأحد، الثلاثاء، الخميس: 7 م - 11 م', notes: '' },
+            { specialty: 'عيادات الأطفال', emoji: '👶', fee: '200', doctor: 'محمد حسان (اخصائى)', schedule: 'الخميس: 6 م - 12 ص، الجمعة: 10 ص - 5 م', notes: '' },
+            { specialty: 'عيادات الأطفال', emoji: '👶', fee: '200', doctor: 'محمد سليمان (اخصائى)', schedule: 'الأحد: 6 م - 9 م، الإثنين: 8 م - 11 م', notes: '' },
+            { specialty: 'عيادات الأطفال', emoji: '👶', fee: '200', doctor: 'اسلام العطار (اخصائى)', schedule: 'الأحد: 9 م - 11 م', notes: '' },
+            { specialty: 'عيادات الأطفال', emoji: '👶', fee: '200', doctor: 'محمد عبد الباقي (اخصائى)', schedule: 'الأحد: 3 م - 5 م', notes: '' },
+            { specialty: 'عيادات الأطفال', emoji: '👶', fee: '200', doctor: 'رمضان الجمال (اخصائى)', schedule: 'الإثنين: 5 م - 7 م', notes: '' },
+            { specialty: 'عيادات الأطفال', emoji: '👶', fee: '200', doctor: 'نور الدمرداش (اخصائى)', schedule: 'الإثنين: 4 م - 6 م', notes: '' },
+            { specialty: 'غدد وسكر أطفال', emoji: '🍬', fee: '350', doctor: 'سماح احمد حسنين (استشاري غدد وسكر اطفال)', schedule: 'الأربعاء: 2 م - 4 م', notes: '' },
+            { specialty: 'نساء و توليد', emoji: '🤰', fee: '300', doctor: 'محمد علي (استشارى)', schedule: 'السبت: 1 م - 6 م، الإثنين: 2 م - 6 م، الأربعاء: 2 م - 6 م', notes: 'بالحجز المسبق' },
+            { specialty: 'نساء و توليد', emoji: '🤰', fee: '300', doctor: 'نشوى اسامة (استشارى)', schedule: 'الأحد، الأربعاء، الخميس، الجمعة: 2 م - 7 م', notes: 'بالحجز المسبق | جروب واتساب: 01154124413' },
+            { specialty: 'نساء و توليد', emoji: '🤰', fee: '300', doctor: 'محمد رضا (استشارى)', schedule: 'الإثنين، الخميس: 9 م الي 11 م، الجمعة: 2 م - 4 م', notes: '' },
+            { specialty: 'نساء و توليد', emoji: '🤰', fee: '300', doctor: 'لمياء شندى (استشارى)', schedule: 'السبت، الثلاثاء: 1 م - 3 م، الإثنين: 9 م الي 11 م', notes: '' },
+            { specialty: 'نساء و توليد', emoji: '🤰', fee: '300', doctor: 'محمد عبدالمنعم (استشارى)', schedule: 'السبت: 9 م الى 11 م، الثلاثاء: 10 ص الى 1 م', notes: '' },
+            { specialty: 'نساء و توليد', emoji: '🤰', fee: '300', doctor: 'أحمد طه (استشارى)', schedule: 'السبت، الإثنين، الأربعاء: 4 م - 7 م', notes: '' },
+            { specialty: 'نساء و توليد', emoji: '🤰', fee: '300', doctor: 'مها رمضان (استشارى)', schedule: 'الأحد: 5 م - 7 م، الثلاثاء، الخميس: 9 م - 11 م', notes: '' },
+            { specialty: 'نساء و توليد', emoji: '🤰', fee: '300', doctor: 'عبد العزيز شاهين (استشارى)', schedule: 'الأحد، الأربعاء: 9 م - 10 م', notes: '' },
+            { specialty: 'نساء و توليد', emoji: '🤰', fee: '300', doctor: 'احمد عرفات (استشارى)', schedule: 'السبت: 8 م - 11 م، الأحد: 12 ص - 2 م، الإثنين، الثلاثاء: 7 م - 9 م، الخميس: 12 م - 2 م', notes: '' },
+            { specialty: 'نساء و توليد', emoji: '🤰', fee: '300', doctor: 'محمد الشرقاوي (استشارى)', schedule: 'الجمعة: 5 م - 7 م', notes: '' },
+            { specialty: 'نساء و توليد', emoji: '🤰', fee: '300', doctor: 'احمد سعد (استشارى)', schedule: 'الجمعة: 7 م - 9 م، الثلاثاء: 5 م - 7 م، الخميس: 7 م - 9 م', notes: '' },
+            { specialty: 'نساء و توليد', emoji: '🤰', fee: '300', doctor: 'حمام جاويش (استشارى)', schedule: 'الجمعة: 1 م - 3 م، الإثنين: 11 ص - 1 م', notes: '' },
+            { specialty: 'نساء و توليد', emoji: '🤰', fee: '300', doctor: 'اسماء ماضي (استشارى)', schedule: 'الخميس: 8 م - 10 م', notes: '' },
+            { specialty: 'نساء و توليد', emoji: '🤰', fee: '300', doctor: 'عمر ناصر (استشارى)', schedule: 'الأحد: 7 م - 9 م، الخميس: 9 م - 11 م', notes: '' },
+            { specialty: 'أنف و أذن و حنجرة', emoji: '👂👃', fee: '300', doctor: 'محمود عباس (استشارى)', schedule: 'السبت: 12:30 م - 2 م، الإثنين، الأربعاء: 5 م - 7 م، الثلاثاء، الخميس: 3:30 م - 5 م', notes: '' },
+            { specialty: 'أنف و أذن و حنجرة', emoji: '👂👃', fee: '300', doctor: 'معتز الشربينى (استشارى)', schedule: 'السبت: 9 م - 11 م، الأحد: 4 م - 6 م، الإثنين، الأربعاء، الخميس: 8:30 م - 10 م', notes: '' },
+            { specialty: 'أنف و أذن و حنجرة', emoji: '👂👃', fee: '300', doctor: 'خالد وشاحى (استشارى)', schedule: 'الثلاثاء: 6 م - 8 م، الأربعاء: 12 م - 2 م', notes: '' },
+            { specialty: 'أنف و أذن و حنجرة', emoji: '👂👃', fee: '300', doctor: 'احمد المنشاوى (اخصائى)', schedule: 'الإثنين: 4 م - 6 م', notes: '' },
+            { specialty: 'أنف و أذن و حنجرة', emoji: '👂👃', fee: '300', doctor: 'يحيى النجار (استشاري)', schedule: 'الأحد، الثلاثاء: 8:30 م - 10 م', notes: '' },
+            { specialty: 'أنف و أذن و حنجرة', emoji: '👂👃', fee: '300', doctor: 'احمد عبد الوراث (استشارى)', schedule: 'السبت: 12 م - 2 م، الأربعاء، الخميس: 2 م - 4 م', notes: '' },
+            { specialty: 'أنف و أذن و حنجرة', emoji: '👂👃', fee: '300', doctor: 'احمد ابوالسعود (اخصائي)', schedule: 'الأحد: 1 م - 4 م، الجمعة: 5 م - 9 م', notes: '' },
+            { specialty: 'أسنان كبار', emoji: '🦷', fee: '150', doctor: 'محمد جابر (اخصائى)', schedule: 'السبت، الإثنين، الأربعاء: 5 م - 9 م', notes: '' },
+            { specialty: 'أسنان كبار', emoji: '🦷', fee: '150', doctor: 'منال عبد الكريم (اخصائى)', schedule: 'الثلاثاء: 10 ص - 3 م، الجمعة: 2 م - 7 م', notes: '' },
+            { specialty: 'أسنان كبار', emoji: '🦷', fee: '150', doctor: 'محمد سمير (اخصائي)', schedule: 'الأحد، الثلاثاء: 6:30 م - 8:30 م', notes: '' },
+            { specialty: 'أسنان أطفال', emoji: '🦷👶', fee: '150', doctor: 'حسن على (استشارى)', schedule: 'السبت، الأحد، الإثنين، الثلاثاء، الأربعاء، الخميس: 5 م - 9 م', notes: 'بالحجز المسبق' },
+            { specialty: 'جراحة عامة', emoji: '🩺🩹', fee: '300', doctor: 'صلاح حلمى (استشارى)', schedule: 'الإثنين: 2 م - 3 م، الخميس: 12 م - 3 م، الجمعة: 12 م - 2 م', notes: '' },
+            { specialty: 'جراحة عامة', emoji: '🩺🩹', fee: '300', doctor: 'عبد النبى ابراهيم (استشارى)', schedule: 'السبت، الأحد، الثلاثاء، الأربعاء: 10 ص - 1 م', notes: '' },
+            { specialty: 'جراحة عامة', emoji: '🩺🩹', fee: '300', doctor: 'احمد فخري (اخصائي)', schedule: 'السبت، الإثنين: 8:30 م - 11 م', notes: '' },
+            { specialty: 'جراحة عامة', emoji: '🩺🩹', fee: '300', doctor: 'احمد حمدى (اخصائي)', schedule: 'الإثنين، الخميس: 7 م الي 9 م', notes: '' },
+            { specialty: 'جراحة عامة', emoji: '🩺🩹', fee: '300', doctor: 'محمد صبحى (استشارى)', schedule: 'السبت، الأربعاء: 6 م - 8 م، الأحد: 6 م - 7 م', notes: '' },
+            { specialty: 'جراحة عامة', emoji: '🩺🩹', fee: '300', doctor: 'محمود عبدالواحد (استشاري علاج اورام)', schedule: 'الأحد: 3 م الي 5 م', notes: '' },
+            { specialty: 'جراحة أطفال', emoji: '🧸', fee: '300', doctor: 'يحيى حمزة سيد الاهل (استشارى)', schedule: 'الأحد، الإثنين: 1 م الي 3 م', notes: 'بالحجز المسبق. جميع الحجوزات تبدأ 9 ص - 11 ص' },
+            { specialty: 'جراحة أطفال', emoji: '🧸', fee: '300', doctor: 'محمد متولى (استشارى)', schedule: 'السبت، الأربعاء: 5 م - 7 م', notes: 'جميع الحجوزات تبدأ 9 ص - 11 ص' },
+            { specialty: 'جراحة أطفال', emoji: '🧸', fee: '300', doctor: 'محمد سيد عبد المنصف (استشارى)', schedule: 'الخميس: 8 م - 10 م', notes: 'جميع الحجوزات تبدأ 9 ص - 11 ص' },
+            { specialty: 'جراحة أطفال', emoji: '🧸', fee: '300', doctor: 'محمد حسن (استشارى)', schedule: 'الجمعة: 7 م - 9 م', notes: 'جميع الحجوزات تبدأ 9 ص - 11 ص' },
+            { specialty: 'جراحة أطفال', emoji: '🧸', fee: '300', doctor: 'رضا ابو اليزيد (استشارى)', schedule: 'الأحد، الإثنين، الثلاثاء: 7 م - 9 م', notes: 'جميع الحجوزات تبدأ 9 ص - 11 ص' },
+            { specialty: 'الباطنة', emoji: '🩺', fee: '300', doctor: 'ايناس طلبة (إستشاري باطنة و كلى و سكر و غدد)', schedule: 'السبت، الثلاثاء، الخميس: 9 م - 11 م، الأحد: 7:30 م - 9:30 م، الإثنين: 11 ص - 3 م، الأربعاء: 11 ص - 1 م', notes: '' },
+            { specialty: 'الباطنة', emoji: '🩺', fee: '300', doctor: 'أحمد الصغير (استشارى)', schedule: 'السبت، الأحد، الثلاثاء، الخميس: 12 م - 3 م، الجمعة: 8 م - 10 م', notes: '' },
+            { specialty: 'الباطنة', emoji: '🩺', fee: '300', doctor: 'نبيل عبد الحكيم (استشارى جهاز هضمى و كبد و مناظير)', schedule: 'الإثنين: 3:30 م - 5:30 م', notes: '' },
+            { specialty: 'الباطنة', emoji: '🩺', fee: '300', doctor: 'محمود ابو عميرة (اخصائى غدد صماء وسكر)', schedule: 'الثلاثاء: 4 م - 6 م', notes: '' },
+            { specialty: 'الباطنة', emoji: '🩺', fee: '300', doctor: 'محمود احمد عرفة (استشاري سكر و غدد باطنة عام)', schedule: 'السبت: 4 م - 6 م، الأحد: 4:30 م - 6 م، الأربعاء: 3 م - 5 م، الإثنين: 6:30 م - 8 م', notes: '' },
+            { specialty: 'الباطنة', emoji: '🩺', fee: '300', doctor: 'محمود محمد عبد العزيز (استشارى باطنة و كلى و سكر)', schedule: 'الإثنين، الأربعاء: 9 م - 11 م', notes: '' },
+            { specialty: 'الباطنة', emoji: '🩺', fee: '300', doctor: 'محمد محمود محمد (استشارى سكر وغدد)', schedule: 'السبت، الثلاثاء: 6:30 م - 8:30 م، الأربعاء: 5:30 م - 7:30 م، الخميس: 6 م - 8 م', notes: '' },
+            { specialty: 'العظام', emoji: '🦵🦴', fee: '300', doctor: 'ايهاب راضى (استشارى)', schedule: 'الأحد، الخميس: 9 م - 11 م', notes: '' },
+            { specialty: 'العظام', emoji: '🦵🦴', fee: '300', doctor: 'صلاح القصبى (اخصائى)', schedule: 'السبت: 9 م - 11 م، الإثنين، الثلاثاء: 9:30 م - 11 م', notes: '' },
+            { specialty: 'العظام', emoji: '🦵🦴', fee: '300', doctor: 'محمد صابر (اخصائى)', schedule: 'الثلاثاء: 5 م - 7 م', notes: '' },
+            { specialty: 'العظام', emoji: '🦵🦴', fee: '300', doctor: 'شهاب السيد (اخصائي)', schedule: 'الأربعاء: 5 م الي 7 م', notes: '' },
+            { specialty: 'العظام', emoji: '🦵🦴', fee: '300', doctor: 'مصطفي بدوي (استشاري)', schedule: 'الجمعة: 8 م الي 10 م', notes: '' },
+            { specialty: 'العظام', emoji: '🦵🦴', fee: '300', doctor: 'ناصر السنوسي (استشاري جراحة عظام)', schedule: 'الإثنين: 12 م - 2 م', notes: 'أطفال فقط' },
+            { specialty: 'العظام', emoji: '🦵🦴', fee: '300', doctor: 'هيثم الدسوقي (استشاري)', schedule: 'السبت: 5 م - 7 م، الأربعاء: 9 م - 11 م', notes: '' },
+            { specialty: 'الجلدية', emoji: '🧴', fee: '300', doctor: 'شيرين فاروق (اخصائى)', schedule: 'السبت: 2:30 م - 3:30 م، الأحد، الإثنين، الخميس: 5 م - 6 م، الأربعاء: 6 م - 7 م', notes: 'جلدية وتناسلية وأمراض ذكورة' },
+            { specialty: 'الجلدية', emoji: '🧴', fee: '300', doctor: 'أحمد شلبى (اخصائى)', schedule: 'السبت، الأحد، الثلاثاء، الأربعاء: 7 م - 10 م، الإثنين، الخميس: 7 م - 9 م', notes: 'جلدية وتناسلية وأمراض ذكورة' },
+            { specialty: 'الرمد', emoji: '👁️', fee: '300', doctor: 'مصطفى عبد الغفار (استشارى)', schedule: 'السبت: 4 م - 7 م', notes: 'بداية من أقل من سنة. حجز مسبق 9 ص - 11 ص' },
+            { specialty: 'الرمد', emoji: '👁️', fee: '300', doctor: 'دينا حسن (اخصائى)', schedule: 'الإثنين، الأربعاء: 8 م - 9 م', notes: 'بداية من 6 سنوات. حجز مسبق 9 ص - 11 ص' },
+            { specialty: 'الرمد', emoji: '👁️', fee: '300', doctor: 'منى احمد عبد الكريم (استشارى)', schedule: 'الأحد، الثلاثاء: 7 م - 10 م', notes: 'بداية من 10 سنوات. حجز مسبق 9 ص - 11 ص' },
+            { specialty: 'الرمد', emoji: '👁️', fee: '300', doctor: 'ايزيس سيد (استشارى)', schedule: 'الخميس: 3 م - 6 م، الجمعة: 7 م - 10 م', notes: 'بداية من سن سنة. حجز مسبق 9 ص - 11 ص' },
+            { specialty: 'الرمد', emoji: '👁️', fee: '300', doctor: 'حاتم علي محمود (اخصائي)', schedule: 'الأحد، الثلاثاء، الأربعاء: 2 م - 5 م', notes: 'بداية من سن سنة. حجز مسبق 9 ص - 11 ص' },
+            { specialty: 'أوعية دموية', emoji: '❤️‍🩹', fee: '350', doctor: 'رضا عثمان (استشارى)', schedule: 'الإثنين، الخميس: 9 م - 10 م', notes: 'حجز مسبق 9 ص - 11 ص' },
+            { specialty: 'مسالك بولية', emoji: '腎', fee: '300', doctor: 'حسن النمر (استشارى)', schedule: 'الأحد، الثلاثاء، الخميس: 10:00 م - 12:00 م', notes: '' },
+            { specialty: 'مسالك بولية', emoji: '腎', fee: '300', doctor: 'ابراهيم سلمان (استشاري)', schedule: 'الإثنين، الأربعاء، الجمعة: 7:00 م - 9:00 م', notes: '' },
+            { specialty: 'التخاطب', emoji: '🗣️', fee: '300', doctor: 'نورا الحضرى (اخصائى)', schedule: 'السبت، الخميس: 3 م - 8 م', notes: '' },
+            { specialty: 'صدر و حساسية', emoji: '🌬️', fee: '300', doctor: 'ايمان صبرى (اخصائى)', schedule: 'الثلاثاء، الخميس: 7 م - 9 م، الجمعة: 5 م - 7 م', notes: '' },
+            { specialty: 'صدر و حساسية', emoji: '🌬️', fee: '300', doctor: 'احمد المرغني (استشاري)', schedule: 'السبت، الإثنين: 8 م - 11 م', notes: '' },
+            { specialty: 'صدر و حساسية', emoji: '🌬️', fee: '300', doctor: 'امانى مصطفى (اخصائى)', schedule: 'الإثنين: 1 م - 3 م، الأربعاء: 3 م - 5 م', notes: '' },
+            { specialty: 'التغذية', emoji: '🍎', fee: '350', doctor: 'سارة السيد (اخصائى)', schedule: 'الإثنين: 2 م - 4 م، الأربعاء: 3:30 م - 5 م', notes: '' },
+            { specialty: 'قلب أطفال', emoji: '👶❤️', fee: '350', doctor: 'السيد رشاد فوده (أستشارى)', schedule: 'السبت: 10 ص - 2 م', notes: 'حجز مسبق 9 ص - 11 ص' },
+            { specialty: 'إشاعة 4D', emoji: '📸', fee: 'غير محدد', doctor: 'شريف الهضيبى (استشارى)', schedule: 'الخميس: 8 م - 10 م', notes: 'حجز مسبق للدكتورة فاتن والدكتور شريف 9 ص - 11 ص' },
+            { specialty: 'إشاعة 4D', emoji: '📸', fee: 'غير محدد', doctor: 'فاتن بدر (اخصائى)', schedule: 'السبت: 2 م - 4 م، الأربعاء: 12 م - 3 م', notes: 'حجز مسبق للدكتورة فاتن والدكتور شريف 9 ص - 11 ص' },
+            { specialty: 'موجات صوتية', emoji: '🔊', fee: 'غير محدد', doctor: 'اشرف راضي (سونار استشاري)', schedule: 'السبت: 5 م - 7 م، الأحد، الأربعاء: 6 م - 8 م', notes: 'حجز مسبق لجميع الأطباء 9 ص - 11 ص' },
+            { specialty: 'موجات صوتية', emoji: '🔊', fee: 'غير محدد', doctor: 'مصطفي غالي (استشاري سونار)', schedule: 'الإثنين، الثلاثاء، الخميس: 6 م - 8 م', notes: 'حجز مسبق لجميع الأطباء 9 ص - 11 ص' },
+            { specialty: 'مخ و أعصاب أطفال', emoji: '🧠', fee: '350', doctor: 'محمود صابر (استشارى)', schedule: 'الأربعاء: 1 م - 3 م', notes: 'حجز مسبق 9 ص - 11 ص' },
+            { specialty: 'قلب كبار', emoji: '🫀', fee: '350', doctor: 'عبدالفتاح سيد (استشاري قلب والاوعيه)', schedule: 'الأحد، الثلاثاء: 1 م - 5 م', notes: 'حجز مسبق 9 ص - 11 ص' },
+            { specialty: 'قلب كبار', emoji: '🫀', fee: '350', doctor: 'محمود راضي (استشاري قلب والاوعيه)', schedule: 'الأربعاء: 1 م - 3 م', notes: 'حجز مسبق 9 ص - 11 ص' },
+            { specialty: 'جهاز هضمي و كبد و مناظير', emoji: '🌡️', fee: 'غير محدد', doctor: 'جمال سليمان (استشاري)', schedule: 'الأحد: 12 م - 2 م', notes: 'عيادات الجهاز الهضمي و الكبد والمناظير' },
+        ];
+
+        const daysOfWeek = ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
+        
+        // This is always set to the current day on load, as per the user's latest requirement.
+        let selectedDay = 'all'; 
+
+        // --- Utility Functions ---
+
+        // Function to determine the current day in Arabic
+        function getCurrentDayInArabic() {
+            const dayIndex = new Date().getDay(); // 0 for Sunday, 6 for Saturday
+            // 0: الأحد, 1: الإثنين, ..., 6: السبت
+            const orderedDays = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+            return orderedDays[dayIndex];
+        }
+
+        // Extracts all unique specialties for the dropdown and prioritizes them
+        function getUniqueSpecialties() {
+            const allSpecialties = [...new Set(clinicsData.map(c => c.specialty))];
+            
+            const prioritizedOrder = [
+                'عيادات الأطفال', 
+                'نساء و توليد', 
+                'جراحة أطفال', 
+                'أسنان أطفال'
+            ];
+
+            const prioritizedSpecialties = [];
+            const otherSpecialties = [];
+
+            allSpecialties.forEach(specialty => {
+                if (prioritizedOrder.includes(specialty)) {
+                    prioritizedSpecialties.push(specialty);
+                } else {
+                    otherSpecialties.push(specialty);
+                }
+            });
+            
+            // Sort prioritized specialties based on the fixed order
+            prioritizedSpecialties.sort((a, b) => prioritizedOrder.indexOf(a) - prioritizedOrder.indexOf(b));
+            
+            // Sort the rest alphabetically
+            otherSpecialties.sort();
+
+            // Combine and return
+            return [...prioritizedSpecialties, ...otherSpecialties];
+        }
+
+        /**
+         * Parses the schedule string to see if a specific day is included.
+         * @param {string} schedule - The complete schedule string.
+         * @param {string} day - The Arabic name of the day (e.g., 'الأحد').
+         * @returns {boolean}
+         */
+        function hasDay(schedule, day) {
+            if (day === 'all') return true;
+            
+            // Check for direct day mention (e.g., "السبت: 4م - 7م") or comma-separated list (e.g., "السبت، الإثنين،...)
+            // Note: The schedule contains "،" (Arabic comma)
+            const pattern = new RegExp(`(^|\\b|،)\\s*${day}`, 'g');
+            return pattern.test(schedule);
+        }
+
+        /**
+         * Parses the full schedule string to isolate ONLY the schedule for the specified day.
+         * @param {string} fullSchedule - The complete schedule string.
+         * @param {string} day - The Arabic name of the day (e.g., 'الأحد').
+         * @returns {string} - The schedule slice for that day, or the full schedule if combined entry, or 'لا يوجد'.
+         */
+        function extractDaySchedule(fullSchedule, day) {
+            
+            // Regex for specific day block: finds ' Day : Schedule, ' or ' Day : Schedule$'
+            // We look for the exact day name followed by a colon and the time range.
+            const pattern = new RegExp(`(\\s*${day}\\s*:\\s*[^،]*\\s*)`, 'g');
+            let match = fullSchedule.match(pattern);
+            
+            if (match) {
+                // If a specific match is found, return it.
+                return match[0].replace(/^،\s*/, '').trim();
+            }
+
+            // Fallback for combined entries: If the schedule lists multiple days and the current day is one of them,
+            // we assume the same time applies to all days in that block and show the simplified entry.
+            // Example: "السبت، الأحد، الثلاثاء: 10 ص - 1 م"
+            const combinedPattern = new RegExp(`^\\s*(${daysOfWeek.join('|')}(?:،\\s*${daysOfWeek.join('|')})*):\\s*([^،]+)`, 'g');
+            match = fullSchedule.match(combinedPattern);
+            
+            if (match && match.length > 0) {
+                const daysPart = match[0].split(':')[0];
+                const timePart = match[0].split(':')[1].trim();
+
+                if (daysPart.includes(day)) {
+                    return `${day}: ${timePart}`;
+                }
+            }
+
+
+            return 'لا يوجد موعد محدد لهذا اليوم.';
+        }
+        
+        /**
+         * Checks if the full schedule contains more than just the current day's single entry.
+         * @param {string} fullSchedule - The complete schedule string.
+         * @param {string} day - The Arabic name of the day.
+         * @returns {boolean}
+         */
+        function isMultiDaySchedule(fullSchedule, day) {
+            // Check if the schedule string contains any day other than the current day.
+            const otherDays = daysOfWeek.filter(d => d !== day);
+            return otherDays.some(d => fullSchedule.includes(d));
+        }
+
+        // --- UI Initialization and Rendering ---
+
+        function initFilters() {
+            // 1. Populate Specialty Dropdown
+            const specialtyFilter = document.getElementById('specialty-filter');
+            const uniqueSpecialties = getUniqueSpecialties();
+
+            uniqueSpecialties.forEach(specialty => {
+                const option = document.createElement('option');
+                option.value = specialty;
+                option.textContent = specialty;
+                specialtyFilter.appendChild(option);
+            });
+
+            // 2. Set initial filter to current day
+            const currentDay = getCurrentDayInArabic();
+            selectedDay = currentDay; 
+
+            // Set initial filter title to reflect the current day filter
+            document.getElementById('day-filter-title').textContent = `عيادات اليوم (${currentDay}):`;
+            // Removed: document.getElementById('current-day-name').textContent = `${currentDay}`;
+
+            // Initial render: filter by current day immediately
+            filterSchedule();
+        }
+
+        /**
+         * Toggles the display of the full weekly schedule versus just the current day's schedule.
+         * @param {string} id - The unique ID prefix for the schedule elements (e.g., 'schedule-0').
+         */
+        function toggleFullSchedule(id) {
+            const currentScheduleEl = document.getElementById(`${id}-day`);
+            const fullScheduleEl = document.getElementById(`${id}-full`);
+            const toggleButton = document.getElementById(`${id}-toggle`);
+            
+            if (fullScheduleEl.classList.contains('hidden')) {
+                // Switch to full schedule
+                currentScheduleEl.classList.add('hidden');
+                fullScheduleEl.classList.remove('hidden');
+                toggleButton.textContent = 'إخفاء مواعيد الأسبوع';
+                toggleButton.classList.remove('text-primary-indigo');
+                toggleButton.classList.add('text-red-600');
+            } else {
+                // Switch back to day schedule
+                fullScheduleEl.classList.add('hidden');
+                currentScheduleEl.classList.remove('hidden');
+                toggleButton.textContent = 'إظهار باقي مواعيد الدكتور على مدار الأسبوع';
+                toggleButton.classList.remove('text-red-600');
+                toggleButton.classList.add('text-primary-indigo');
+            }
+        }
+        
+        function filterSchedule() {
+            const specialty = document.getElementById('specialty-filter').value;
+            const searchTerm = document.getElementById('doctor-search').value.toLowerCase().trim();
+            const resultsContainer = document.getElementById('schedule-results');
+            const noResults = document.getElementById('no-results');
+            
+            // Determine which day filter to apply:
+            // If a specific specialty is chosen (not 'all'), we show all days for that specialty.
+            // Otherwise, we keep the default filter set to the current day.
+            const dayFilterToApply = (specialty !== 'all') ? 'all' : getCurrentDayInArabic();
+            
+            // Update the day title to reflect the current filtering mode
+            const dayTitle = document.getElementById('day-filter-title');
+            if (specialty !== 'all') {
+                dayTitle.textContent = 'نتائج التصفية (كل أيام الأسبوع):';
+            } else {
+                dayTitle.textContent = `عيادات اليوم (${dayFilterToApply}):`;
+            }
+
+
+            let filteredData = clinicsData.filter(clinic => {
+                // Filter 1: Specialty
+                const specialtyMatch = specialty === 'all' || clinic.specialty === specialty;
+
+                // Filter 2: Day of Week (Uses the current day if specialty is 'all', or 'all' if specific specialty is chosen)
+                const dayMatch = hasDay(clinic.schedule, dayFilterToApply);
+                
+                // Filter 3: Doctor Name Search
+                // Added "د." prefix check for searching
+                const doctorNameWithPrefix = `د. ${clinic.doctor}`;
+                const searchMatch = searchTerm === '' || clinic.doctor.toLowerCase().includes(searchTerm) || doctorNameWithPrefix.toLowerCase().includes(searchTerm);
+
+                return specialtyMatch && dayMatch && searchMatch;
+            });
+
+            // Render Results
+            resultsContainer.innerHTML = '';
+
+            if (filteredData.length === 0) {
+                noResults.classList.remove('hidden');
+            } else {
+                noResults.classList.add('hidden');
+                
+                filteredData.forEach((clinic, index) => {
+                    // When a specialty is selected, we want to show the full schedule by default.
+                    const dayToShow = (specialty !== 'all') ? 'all' : getCurrentDayInArabic();
+                    const card = createClinicCard(clinic, dayToShow, index);
+                    resultsContainer.appendChild(card);
+                });
+            }
+        }
+
+        function createClinicCard(clinic, displayMode, clinicIndex) {
+            const card = document.createElement('div');
+            card.className = 'bg-white p-4 md:p-6 rounded-xl shadow-md transition-all hover:shadow-xl border-r-4 border-primary-indigo md:flex md:gap-6 items-start';
+            
+            const notesContent = clinic.notes ? 
+                `<p class="text-sm mt-3 text-red-600 p-2 bg-red-50 rounded-lg border-r-2 border-red-400">
+                    <span class="font-bold">ملاحظات:</span> ${clinic.notes}
+                </p>` : '';
+
+            // --- Schedule Logic ---
+            const uniqueId = `schedule-${clinicIndex}`;
+            const fullScheduleText = clinic.schedule;
+            
+            // If displayMode is 'all', we show the full schedule text in both containers,
+            // and hide the toggle button to avoid confusion.
+            const isFullSchedule = displayMode === 'all';
+
+            const initialScheduleText = isFullSchedule ? fullScheduleText : extractDaySchedule(fullScheduleText, displayMode);
+            
+            // Determine if the full schedule has more than what's being shown
+            // If we are already showing 'all', we don't need the button.
+            const showToggleButton = !isFullSchedule && isMultiDaySchedule(fullScheduleText, displayMode);
+            
+            // HTML for the schedule area
+            // Note: If isFullSchedule is true, day and full containers hold the same content (full schedule).
+            const scheduleHTML = `
+                <div id="${uniqueId}-day" class="schedule-text text-md leading-relaxed p-2 bg-light-blue rounded-lg border-2 border-primary-teal custom-scroll overflow-x-auto whitespace-nowrap ${isFullSchedule ? '' : ''}">
+                    ${initialScheduleText}
+                </div>
+                <div id="${uniqueId}-full" class="schedule-text text-md leading-relaxed p-2 bg-light-blue rounded-lg border-2 border-primary-teal custom-scroll overflow-x-auto whitespace-nowrap ${isFullSchedule ? 'hidden' : 'hidden'}">
+                    ${fullScheduleText}
+                </div>
+            `;
+            
+            // The toggle button
+            const toggleButtonHTML = showToggleButton ? 
+                `<button id="${uniqueId}-toggle" 
+                    onclick="toggleFullSchedule('${uniqueId}')"
+                    class="mt-2 text-sm font-semibold text-primary-indigo hover:text-primary-teal transition duration-150 focus:outline-none">
+                    إظهار باقي مواعيد الدكتور على مدار الأسبوع
+                </button>` : '';
+            
+            // If specialty filter is active, the toggle button is not needed/should be hidden.
+            const finalToggleButtonHTML = isFullSchedule ? '' : toggleButtonHTML;
+
+            card.innerHTML = `
+                <!-- Specialty & Doctor Info (Left/Top) -->
+                <div class="md:w-1/3 flex-shrink-0 border-b md:border-b-0 md:border-l md:pl-6 pb-4 md:pb-0 mb-4 md:mb-0">
+                    <p class="text-3xl mb-2">${clinic.emoji}</p>
+                    <!-- Added 'د. ' prefix here -->
+                    <h3 class="text-xl md:text-2xl font-bold text-gray-800 leading-snug">د. ${clinic.doctor}</h3>
+                    <p class="text-primary-teal font-semibold text-lg mt-1">${clinic.specialty}</p>
+                    <div class="mt-3 text-lg font-bold text-accent-orange">
+                        ${clinic.fee} <span class="text-sm">ج.م</span>
+                    </div>
+                </div>
+
+                <!-- Schedule & Notes (Right/Bottom) -->
+                <div class="md:w-2/3">
+                    <div class="flex items-center text-gray-700 mb-2">
+                        <span class="text-2xl ml-2">🕒</span>
+                        <p class="font-medium">المواعيد:</p>
+                    </div>
+                    
+                    ${scheduleHTML}
+                    ${finalToggleButtonHTML}
+
+                    ${notesContent}
+                </div>
+            `;
+            return card;
+        }
+
+        // Initialize the app when the window loads
+        window.onload = initFilters;
+    </script>
+</body>
+</html>
