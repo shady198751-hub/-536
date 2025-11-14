@@ -12,8 +12,8 @@
         body {
             font-family: 'Cairo', sans-serif;
             background-color: #f0f4f8; /* Light gray background */
-            /* Add padding to the top of the body to prevent content from being hidden by the fixed header */
-            padding-top: 6rem; 
+            /* REMOVED: Adjusted padding top for cleaner fixed header look */
+            /* padding-top: 5rem; */ 
         }
         /* Custom scrollbar style for aesthetics */
         .custom-scroll::-webkit-scrollbar {
@@ -44,13 +44,13 @@
         }
     </script>
 </head>
-<body class="p-4 md:p-8">
+<body class="p-6 md:p-12">
 
-    <!-- Fixed Navigation Bar -->
-    <nav class="fixed top-0 right-0 left-0 bg-white shadow-lg z-50 p-4 border-b-4 border-primary-teal">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
+    <!-- Navigation Bar - FIXED POSITIONING REMOVED -->
+    <nav class="bg-white shadow-xl z-50 py-4 border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
             <!-- Hospital Name -->
-            <h1 class="text-lg font-extrabold text-primary-indigo md:text-xl">مستشفي تبارك فرع المريوطية</h1> 
+            <h1 class="text-xl font-extrabold text-primary-indigo">مستشفي تبارك فرع المريوطية</h1> 
             <div class="flex space-x-4 space-x-reverse">
                 <!-- Home Button (Updated to be an actual link) -->
                 <a href="https://tabarakmariouteya.site/" 
@@ -73,19 +73,20 @@
 
 
     <div class="max-w-7xl mx-auto">
-        <!-- Filters Section (mt-4 added for spacing from fixed nav bar) -->
-        <div class="mt-4 mb-8 p-4 bg-white rounded-xl shadow-lg">
+        <!-- Filters Section - Enhanced spacing and look (Removed mt-4 as header is no longer fixed) -->
+        <div class="mb-10 p-6 bg-white rounded-xl shadow-2xl border border-gray-100">
             
-            <!-- Description - REMOVED: <p class="text-gray-600 mb-4 text-center text-lg font-medium">ابحث وتصفح مواعيد الأطباء بسهولة حسب التخصص واليوم.</p> -->
+            <!-- Description -->
+            <!-- <p class="text-gray-600 mb-6 text-center text-lg font-medium">ابحث وتصفح مواعيد الأطباء بسهولة حسب التخصص واليوم.</p> --> 
 
-            <h2 class="text-xl font-bold mb-4 text-primary-indigo border-b pb-2">تصفية المواعيد</h2>
+            <h2 class="text-2xl font-extrabold mb-4 text-primary-indigo border-b pb-3">تصفية المواعيد</h2>
             
-            <div class="flex flex-col md:flex-row gap-4 mb-4">
+            <div class="flex flex-col md:flex-row gap-6 mb-6">
                 
                 <!-- Specialty Filter -->
                 <div class="flex-1">
-                    <label for="specialty-filter" class="block text-sm font-medium text-gray-700 mb-1">اختر التخصص:</label>
-                    <select id="specialty-filter" onchange="filterSchedule()" class="w-full p-2.5 border border-gray-300 bg-white rounded-lg shadow-sm focus:ring-primary-teal focus:border-primary-teal transition duration-150">
+                    <label for="specialty-filter" class="block text-sm font-semibold text-gray-700 mb-1">اختر التخصص:</label>
+                    <select id="specialty-filter" onchange="filterSchedule()" class="w-full p-3 border border-gray-300 bg-white rounded-lg shadow-sm focus:ring-primary-teal focus:border-primary-teal transition duration-150 text-base">
                         <option value="all">كل التخصصات</option>
                         <!-- Options filled by JS -->
                     </select>
@@ -93,20 +94,20 @@
 
                 <!-- Search Input (Doctor Name) -->
                 <div class="flex-1">
-                    <label for="doctor-search" class="block text-sm font-medium text-gray-700 mb-1">البحث باسم الطبيب:</label>
-                    <input type="text" id="doctor-search" oninput="filterSchedule()" placeholder="ابحث بالاسم أو اللقب" class="w-full p-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-primary-teal focus:border-primary-teal transition duration-150">
+                    <label for="doctor-search" class="block text-sm font-semibold text-gray-700 mb-1">البحث باسم الطبيب:</label>
+                    <input type="text" id="doctor-search" oninput="filterSchedule()" placeholder="ابحث بالاسم أو اللقب" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-primary-teal focus:border-primary-teal transition duration-150 text-base">
                 </div>
             </div>
 
             <!-- Day Filter Indicator (Always shows current day) -->
             <div id="day-filter-container">
-                <h3 id="day-filter-title" class="text-lg font-semibold mb-2 text-gray-800">عيادات اليوم:</h3>
+                <h3 id="day-filter-title" class="text-xl font-bold mb-2 text-gray-800">عيادات اليوم:</h3>
                 <!-- No button will be generated here anymore -->
             </div>
         </div>
 
         <!-- Schedule Results Container -->
-        <div id="schedule-results" class="space-y-4">
+        <div id="schedule-results" class="space-y-6">
             <!-- Clinic cards will be rendered here -->
             <div class="text-center p-8 bg-white rounded-xl shadow-lg text-gray-500">
                 جارٍ تحميل جدول المواعيد...
@@ -114,14 +115,14 @@
         </div>
         
         <!-- No Results Message -->
-        <div id="no-results" class="hidden text-center p-8 bg-yellow-100 rounded-xl shadow-lg border-r-4 border-yellow-500 mt-4">
+        <div id="no-results" class="hidden text-center p-8 bg-yellow-50 rounded-xl shadow-lg border-r-4 border-yellow-500 mt-6">
             <p class="text-lg font-semibold text-yellow-800">⚠️ عذراً، لم يتم العثور على مواعيد مطابقة لنتائج التصفية.</p>
         </div>
 
     </div>
     
-    <!-- Footer Section -->
-    <footer class="mt-12 py-6 bg-primary-indigo text-white shadow-xl">
+    <!-- Footer Section - Enhanced padding -->
+    <footer class="mt-16 py-8 bg-primary-indigo text-white shadow-xl">
         <div class="max-w-7xl mx-auto text-center text-sm">
             <p class="mb-1">جميع الحقوق محفوظة © 2025 مستشفى تبارك للولادة والأطفال</p>
             <p class="text-gray-400">Designed By Shady Yassin</p>
@@ -439,7 +440,8 @@
 
         function createClinicCard(clinic, displayMode, clinicIndex) {
             const card = document.createElement('div');
-            card.className = 'bg-white p-4 md:p-6 rounded-xl shadow-md transition-all hover:shadow-xl border-r-4 border-primary-indigo md:flex md:gap-6 items-start';
+            // Enhanced shadow and border width
+            card.className = 'bg-white p-4 md:p-6 rounded-xl shadow-xl transition-all hover:shadow-2xl border-r-8 border-primary-indigo md:flex md:gap-6 items-start';
             
             const notesContent = clinic.notes ? 
                 `<p class="text-sm mt-3 text-red-600 p-2 bg-red-50 rounded-lg border-r-2 border-red-400">
