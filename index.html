@@ -287,37 +287,40 @@
 
         /**
          * Parses the full schedule string to isolate ONLY the schedule for the specified day.
+         *
          * @param {string} fullSchedule - The complete schedule string.
          * @param {string} day - The Arabic name of the day (e.g., 'الأحد').
          * @returns {string} - The schedule slice for that day, or the full schedule if combined entry, or 'لا يوجد'.
          */
         function extractDaySchedule(fullSchedule, day) {
             
-            // Regex for specific day block: finds ' Day : Schedule, ' or ' Day : Schedule$'
-            // We look for the exact day name followed by a colon and the time range.
-            const pattern = new RegExp(`(\\s*${day}\\s*:\\s*[^،]*\\s*)`, 'g');
-            let match = fullSchedule.match(pattern);
+            // 1. Look for a specific entry block for the day (Day: Time, or Day: Time$)
+            // This handles specific entries like "الأحد: 8 م - 11 م"
+            const specificDayPattern = new RegExp(`(\\s*${day}\\s*:\\s*[^،]*\\s*)`, 'g');
+            let match = fullSchedule.match(specificDayPattern);
             
-            if (match) {
-                // If a specific match is found, return it.
+            if (match && match.length > 0) {
+                // Return the specific entry found
                 return match[0].replace(/^،\s*/, '').trim();
             }
 
-            // Fallback for combined entries: If the schedule lists multiple days and the current day is one of them,
-            // we assume the same time applies to all days in that block and show the simplified entry.
-            // Example: "السبت، الأحد، الثلاثاء: 10 ص - 1 م"
-            const combinedPattern = new RegExp(`^\\s*(${daysOfWeek.join('|')}(?:،\\s*${daysOfWeek.join('|')})*):\\s*([^،]+)`, 'g');
-            match = fullSchedule.match(combinedPattern);
-            
-            if (match && match.length > 0) {
-                const daysPart = match[0].split(':')[0];
-                const timePart = match[0].split(':')[1].trim();
+            // 2. Look for combined entries: (Day1, Day2, ...: Time)
+            // This handles grouped entries like "السبت، الأحد، الإثنين: 9 ص - 6 م"
+            // The regex looks for: (List of Arabic Days including '،') : (Time Range)
+            const combinedEntryRegex = /([\u0621-\u064A\s،\w\d]+):\s*([^،]+)/g;
+            let combinedMatch;
 
-                if (daysPart.includes(day)) {
-                    return `${day}: ${timePart}`;
+            // Iterate through all colon-separated blocks in the schedule
+            while ((combinedMatch = combinedEntryRegex.exec(fullSchedule)) !== null) {
+                const daysList = combinedMatch[1]; // e.g., "السبت، الأحد، الإثنين"
+                const timeRange = combinedMatch[2].trim(); // e.g., "9 ص - 6 م"
+
+                // Check if the list of days explicitly includes the target day
+                if (daysList.includes(day)) {
+                    // Re-format the output to show just the day + time for clarity
+                    return `${day}: ${timeRange}`;
                 }
             }
-
 
             return 'لا يوجد موعد محدد لهذا اليوم.';
         }
@@ -410,7 +413,7 @@
                 // Filter 1: Specialty
                 const specialtyMatch = specialty === 'all' || clinic.specialty === specialty;
 
-                // Filter 2: Day of Week (Uses the current day if specialty is 'all', or 'all' if specific specialty is chosen)
+                // Filter 2: Day of Week 
                 const dayMatch = hasDay(clinic.schedule, dayFilterToApply);
                 
                 // Filter 3: Doctor Name Search
