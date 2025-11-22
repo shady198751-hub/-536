@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>مواعيد مستشفى تبارك للولادة و الأطفال</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,21 +12,55 @@
         body {
             font-family: 'Cairo', sans-serif;
             background-color: #f0f4f8; /* Light gray background */
-            /* REMOVED: Adjusted padding top for cleaner fixed header look */
-            /* padding-top: 5rem; */ 
         }
         /* Custom scrollbar style for aesthetics */
         .custom-scroll::-webkit-scrollbar {
-            width: 8px;
+            height: 8px; /* For horizontal scroll in schedule box */
+            width: 8px; /* For general vertical scroll */
         }
         .custom-scroll::-webkit-scrollbar-thumb {
             background-color: #312e81; /* primary-indigo */
             border-radius: 10px;
         }
+        /* schedule-text is now for the single-day view */
         .schedule-text {
-            /* Ensures schedule text is monospaced or clear */
             white-space: pre-wrap;
             word-break: break-word;
+        }
+        /* Style for the search input wrapper to contain the icon */
+        .search-wrapper {
+            position: relative;
+        }
+        .search-icon {
+            position: absolute;
+            left: 1rem; /* Right aligned in RTL */
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af; /* Gray-400 */
+            pointer-events: none; /* Allows clicks to pass through to the input */
+        }
+        /* Custom class for the weekly schedule grid */
+        .weekly-schedule-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr; /* Day on left, Time on right */
+            gap: 0;
+        }
+        .grid-header {
+            background-color: #312e81;
+            color: white;
+            padding: 0.5rem 0.75rem;
+            font-weight: bold;
+        }
+        .grid-day {
+            background-color: #ecfdf5; /* light-blue */
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid #d1d5db; /* gray-300 */
+            font-weight: 600;
+        }
+        .grid-time {
+            background-color: #f9fafb; /* light gray */
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid #d1d5db;
         }
     </style>
     <script>
@@ -44,27 +78,27 @@
         }
     </script>
 </head>
-<body class="p-6 md:p-12">
+<body class="p-4 md:p-8">
 
-    <!-- Navigation Bar - FIXED POSITIONING REMOVED -->
-    <nav class="bg-white shadow-xl z-50 py-4 border-b border-gray-200">
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-xl sticky top-0 z-50 py-4 border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
             <!-- Hospital Name -->
             <h1 class="text-xl font-extrabold text-primary-indigo">مستشفي تبارك فرع المريوطية</h1> 
             <div class="flex space-x-4 space-x-reverse">
-                <!-- Home Button (Updated to be an actual link) -->
+                <!-- Home Button -->
                 <a href="https://tabarakmariouteya.com/#%D9%85%D8%B3%D8%AA%D8%B4%D9%81%D9%8A-%D8%AA%D8%A8%D8%A7%D8%B1%D9%83-%D9%84%D9%84%D9%88%D9%84%D8%A7%D8%AF%D8%A9-%D9%88%D8%A7%D9%84%D8%A3%D8%B7%D9%81%D8%A7%D9%84-%D8%A8%D8%A7%D9%84%D9%85%D8%B1%D9%8A%D9%88%D8%B7%D9%8A%D8%A9" 
-                   class="text-gray-700 hover:text-primary-teal font-semibold px-3 py-2 rounded-lg transition duration-150 flex items-center">
+                    class="text-gray-700 hover:text-primary-teal font-semibold px-3 py-2 rounded-lg transition duration-150 flex items-center">
                     الصفحة الرئيسة
                 </a>
                 <!-- Book Now Button (Prominent) -->
                 <a href="https://tabarakmariouteya.com/#%D8%A7%D9%84%D8%AD%D8%AC%D8%B2-%D8%A7%D9%88%D9%86%D9%84%D8%A7%D9%8A%D9%86" 
-                   class="bg-primary-teal text-white hover:bg-primary-indigo font-bold px-4 py-2 rounded-lg shadow-md transition duration-150 transform hover:scale-105 flex items-center">
+                    class="bg-primary-teal text-white hover:bg-primary-indigo font-bold px-4 py-2 rounded-lg shadow-md transition duration-150 transform hover:scale-105 flex items-center">
                     احجز الآن
                 </a>
-                <!-- Contact Us Button (Updated to be an actual link) -->
+                <!-- Contact Us Button -->
                 <a href="https://tabarakmariouteya.com/#%D8%A7%D8%AA%D8%B5%D9%84-%D8%A8%D9%86%D8%A7"
-                   class="text-gray-700 hover:text-primary-teal font-semibold px-3 py-2 rounded-lg transition duration-150 flex items-center">
+                    class="text-gray-700 hover:text-primary-teal font-semibold px-3 py-2 rounded-lg transition duration-150 flex items-center">
                     اتصل بنا
                 </a>
             </div>
@@ -72,13 +106,10 @@
     </nav>
 
 
-    <div class="max-w-7xl mx-auto">
-        <!-- Filters Section - Enhanced spacing and look (Removed mt-4 as header is no longer fixed) -->
+    <div class="max-w-7xl mx-auto mt-6">
+        <!-- Filters Section - Enhanced spacing and look -->
         <div class="mb-10 p-6 bg-white rounded-xl shadow-2xl border border-gray-100">
             
-            <!-- Description -->
-            <!-- <p class="text-gray-600 mb-6 text-center text-lg font-medium">ابحث وتصفح مواعيد الأطباء بسهولة حسب التخصص واليوم.</p> --> 
-
             <h2 class="text-2xl font-extrabold mb-4 text-primary-indigo border-b pb-3">تصفية المواعيد</h2>
             
             <div class="flex flex-col md:flex-row gap-6 mb-6">
@@ -92,17 +123,18 @@
                     </select>
                 </div>
 
-                <!-- Search Input (Doctor Name) -->
-                <div class="flex-1">
+                <!-- Search Input (Doctor Name) - Added Search Icon -->
+                <div class="flex-1 search-wrapper">
                     <label for="doctor-search" class="block text-sm font-semibold text-gray-700 mb-1">البحث باسم الطبيب:</label>
-                    <input type="text" id="doctor-search" oninput="filterSchedule()" placeholder="ابحث بالاسم أو اللقب" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-primary-teal focus:border-primary-teal transition duration-150 text-base">
+                    <input type="text" id="doctor-search" oninput="filterSchedule()" placeholder="ابحث بالاسم أو اللقب" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-primary-teal focus:border-primary-teal transition duration-150 text-base pr-10">
+                    <!-- Search Icon SVG -->
+                    <svg class="search-icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </div>
             </div>
 
-            <!-- Day Filter Indicator (Always shows current day) -->
+            <!-- Day Filter Indicator (Always shows current day or 'All' if filtered) -->
             <div id="day-filter-container">
                 <h3 id="day-filter-title" class="text-xl font-bold mb-2 text-gray-800">عيادات اليوم:</h3>
-                <!-- No button will be generated here anymore -->
             </div>
         </div>
 
@@ -121,7 +153,7 @@
 
     </div>
     
-    <!-- Footer Section - Enhanced padding -->
+    <!-- Footer Section -->
     <footer class="mt-16 py-8 bg-primary-indigo text-white shadow-xl">
         <div class="max-w-7xl mx-auto text-center text-sm">
             <p class="mb-1">جميع الحقوق محفوظة © 2025 مستشفى تبارك للولادة والأطفال</p>
@@ -148,7 +180,7 @@
             { specialty: 'عيادات الأطفال', emoji: '👶', fee: '200', doctor: 'نور الدمرداش (اخصائى)', schedule: 'الإثنين: 4 م - 6 م', notes: '' },
             { specialty: 'غدد وسكر أطفال', emoji: '🍬', fee: '350', doctor: 'سماح احمد حسنين (استشاري غدد وسكر اطفال)', schedule: 'الأربعاء: 2 م - 4 م', notes: '' },
             { specialty: 'نساء و توليد', emoji: '🤰', fee: '300', doctor: 'محمد علي (استشارى)', schedule: 'السبت، الإثنين، الأربعاء: 2 م - 6 م', notes: 'بالحجز المسبق' },
-            { specialty: 'نساء و توليد', emoji: '🤰', fee: '300', doctor: 'نشوى اسامة (استشارى)', schedule: 'الأحد، الأربعاء، الخميس، الجمعة: 2 م - 7 م', notes: 'بالحجز المسبق | جروب واتساب: 01154124413' },
+            { specialty: 'نساء و توليد', emoji: '🤰', fee: '300', doctor: 'نشوى اسامة (استشارى)', schedule: 'الأحد، الأربعاء، الخميس، الجمعة: 2 م - 7 م', notes: 'بالحجز المسبق' },
             { specialty: 'نساء و توليد', emoji: '🤰', fee: '300', doctor: 'محمد رضا (استشارى)', schedule: 'الإثنين، الخميس: 9 م - 11 م، الجمعة: 2 م - 4 م', notes: '' },
             { specialty: 'نساء و توليد', emoji: '🤰', fee: '300', doctor: 'لمياء شندى (استشارى)', schedule: 'السبت، الثلاثاء: 1 م - 3 م، الإثنين: 9 م - 11 م', notes: '' },
             { specialty: 'نساء و توليد', emoji: '🤰', fee: '300', doctor: 'محمد عبدالمنعم (استشارى)', schedule: 'السبت: 9 م الى 11 م، الثلاثاء: 10 ص الى 1 م', notes: '' },
@@ -225,7 +257,7 @@
 
         const daysOfWeek = ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
         
-        // This is always set to the current day on load, as per the user's latest requirement.
+        // selectedDay is always set to the current day on load, as per the user's latest requirement.
         let selectedDay = 'all'; 
 
         // --- Utility Functions ---
@@ -271,7 +303,45 @@
         }
 
         /**
+         * Parses the schedule string to convert it into a standardized array of day/time objects for all 7 days.
+         * This function is crucial for the enhanced weekly display.
+         * @param {string} fullSchedule - The complete schedule string (e.g., 'السبت، الإثنين، الثلاثاء: 3 م - 9 م، الأربعاء: 10 ص - 12 م').
+         * @returns {Array<object>} - Array of { day: string, time: string } for all 7 days.
+         */
+        function parseScheduleToDays(fullSchedule) {
+            const weeklyMap = {};
+            daysOfWeek.forEach(day => weeklyMap[day] = 'لا يوجد موعد.');
+
+            // Regex to find all blocks: (Days list) : (Time range)
+            // It searches for groups of days/text followed by a colon and the time range up to the next Arabic comma or end of string.
+            const combinedEntryRegex = /([\u0621-\u064A\s،\w\d]+):\s*([^،]+)/g;
+            let match;
+
+            while ((match = combinedEntryRegex.exec(fullSchedule)) !== null) {
+                const daysListStr = match[1].trim(); // e.g., "السبت، الإثنين، الثلاثاء"
+                const timeRange = match[2].trim(); // e.g., "3 م - 9 م"
+
+                // Split the days list by Arabic comma and filter empty/whitespace entries
+                const currentDays = daysListStr.split('،').map(d => d.trim()).filter(d => d.length > 0);
+
+                currentDays.forEach(day => {
+                    // Only update if the day is a valid day of the week
+                    if (daysOfWeek.includes(day)) {
+                        weeklyMap[day] = timeRange;
+                    }
+                });
+            }
+
+            // Convert map back to an ordered array
+            return daysOfWeek.map(day => ({
+                day: day,
+                time: weeklyMap[day]
+            }));
+        }
+
+        /**
          * Parses the schedule string to see if a specific day is included.
+         *
          * @param {string} schedule - The complete schedule string.
          * @param {string} day - The Arabic name of the day (e.g., 'الأحد').
          * @returns {boolean}
@@ -279,47 +349,28 @@
         function hasDay(schedule, day) {
             if (day === 'all') return true;
             
-            // Check for direct day mention (e.g., "السبت: 4م - 7م") or comma-separated list (e.g., "السبت، الإثنين،...)
-            // Note: The schedule contains "،" (Arabic comma)
-            const pattern = new RegExp(`(^|\\b|،)\\s*${day}`, 'g');
-            return pattern.test(schedule);
+            // Reusing the robust parsing function to check if the day has a valid time entry
+            const parsedSchedule = parseScheduleToDays(schedule);
+            const dayEntry = parsedSchedule.find(entry => entry.day === day);
+            
+            return dayEntry && dayEntry.time !== 'لا يوجد موعد.';
         }
+
 
         /**
          * Parses the full schedule string to isolate ONLY the schedule for the specified day.
+         * (Kept the original logic for backward compatibility with the single-day display)
          *
          * @param {string} fullSchedule - The complete schedule string.
          * @param {string} day - The Arabic name of the day (e.g., 'الأحد').
          * @returns {string} - The schedule slice for that day, or the full schedule if combined entry, or 'لا يوجد'.
          */
         function extractDaySchedule(fullSchedule, day) {
+            const parsedSchedule = parseScheduleToDays(fullSchedule);
+            const dayEntry = parsedSchedule.find(entry => entry.day === day);
             
-            // 1. Look for a specific entry block for the day (Day: Time, or Day: Time$)
-            // This handles specific entries like "الأحد: 8 م - 11 م"
-            const specificDayPattern = new RegExp(`(\\s*${day}\\s*:\\s*[^،]*\\s*)`, 'g');
-            let match = fullSchedule.match(specificDayPattern);
-            
-            if (match && match.length > 0) {
-                // Return the specific entry found
-                return match[0].replace(/^،\s*/, '').trim();
-            }
-
-            // 2. Look for combined entries: (Day1, Day2, ...: Time)
-            // This handles grouped entries like "السبت، الأحد، الإثنين: 9 ص - 6 م"
-            // The regex looks for: (List of Arabic Days including '،') : (Time Range)
-            const combinedEntryRegex = /([\u0621-\u064A\s،\w\d]+):\s*([^،]+)/g;
-            let combinedMatch;
-
-            // Iterate through all colon-separated blocks in the schedule
-            while ((combinedMatch = combinedEntryRegex.exec(fullSchedule)) !== null) {
-                const daysList = combinedMatch[1]; // e.g., "السبت، الأحد، الإثنين"
-                const timeRange = combinedMatch[2].trim(); // e.g., "9 ص - 6 م"
-
-                // Check if the list of days explicitly includes the target day
-                if (daysList.includes(day)) {
-                    // Re-format the output to show just the day + time for clarity
-                    return `${day}: ${timeRange}`;
-                }
+            if (dayEntry && dayEntry.time !== 'لا يوجد موعد.') {
+                return `${dayEntry.day}: ${dayEntry.time}`;
             }
 
             return 'لا يوجد موعد محدد لهذا اليوم.';
@@ -332,7 +383,7 @@
          * @returns {boolean}
          */
         function isMultiDaySchedule(fullSchedule, day) {
-            // Check if the schedule string contains any day other than the current day.
+            // Check if the full schedule string contains any day other than the current day.
             const otherDays = daysOfWeek.filter(d => d !== day);
             return otherDays.some(d => fullSchedule.includes(d));
         }
@@ -357,7 +408,6 @@
 
             // Set initial filter title to reflect the current day filter
             document.getElementById('day-filter-title').textContent = `عيادات اليوم (${currentDay}):`;
-            // Removed: document.getElementById('current-day-name').textContent = `${currentDay}`;
 
             // Initial render: filter by current day immediately
             filterSchedule();
@@ -373,17 +423,17 @@
             const toggleButton = document.getElementById(`${id}-toggle`);
             
             if (fullScheduleEl.classList.contains('hidden')) {
-                // Switch to full schedule
+                // Switch to full schedule (structured grid)
                 currentScheduleEl.classList.add('hidden');
                 fullScheduleEl.classList.remove('hidden');
-                toggleButton.textContent = 'إخفاء مواعيد الأسبوع';
+                toggleButton.textContent = 'إخفاء جدول المواعيد';
                 toggleButton.classList.remove('text-primary-indigo');
                 toggleButton.classList.add('text-red-600');
             } else {
                 // Switch back to day schedule
                 fullScheduleEl.classList.add('hidden');
                 currentScheduleEl.classList.remove('hidden');
-                toggleButton.textContent = 'إظهار باقي مواعيد الدكتور على مدار الأسبوع';
+                toggleButton.textContent = 'إظهار جدول المواعيد الأسبوعي المفصل';
                 toggleButton.classList.remove('text-red-600');
                 toggleButton.classList.add('text-primary-indigo');
             }
@@ -396,18 +446,15 @@
             const noResults = document.getElementById('no-results');
             
             // Determine which day filter to apply:
-            // If a specific specialty is chosen (not 'all'), we show all days for that specialty.
-            // Otherwise, we keep the default filter set to the current day.
             const dayFilterToApply = (specialty !== 'all') ? 'all' : getCurrentDayInArabic();
             
             // Update the day title to reflect the current filtering mode
             const dayTitle = document.getElementById('day-filter-title');
             if (specialty !== 'all') {
-                dayTitle.textContent = 'نتائج التصفية (كل أيام الأسبوع):';
+                dayTitle.textContent = `نتائج التصفية لتخصص ${specialty}: (كل أيام الأسبوع)`;
             } else {
                 dayTitle.textContent = `عيادات اليوم (${dayFilterToApply}):`;
             }
-
 
             let filteredData = clinicsData.filter(clinic => {
                 // Filter 1: Specialty
@@ -417,9 +464,7 @@
                 const dayMatch = hasDay(clinic.schedule, dayFilterToApply);
                 
                 // Filter 3: Doctor Name Search
-                // Added "د." prefix check for searching
-                const doctorNameWithPrefix = `د. ${clinic.doctor}`;
-                const searchMatch = searchTerm === '' || clinic.doctor.toLowerCase().includes(searchTerm) || doctorNameWithPrefix.toLowerCase().includes(searchTerm);
+                const searchMatch = searchTerm === '' || clinic.doctor.toLowerCase().includes(searchTerm) || (`د. ${clinic.doctor}`).toLowerCase().includes(searchTerm);
 
                 return specialtyMatch && dayMatch && searchMatch;
             });
@@ -433,7 +478,6 @@
                 noResults.classList.add('hidden');
                 
                 filteredData.forEach((clinic, index) => {
-                    // When a specialty is selected, we want to show the full schedule by default.
                     const dayToShow = (specialty !== 'all') ? 'all' : getCurrentDayInArabic();
                     const card = createClinicCard(clinic, dayToShow, index);
                     resultsContainer.appendChild(card);
@@ -443,7 +487,6 @@
 
         function createClinicCard(clinic, displayMode, clinicIndex) {
             const card = document.createElement('div');
-            // Enhanced shadow and border width
             card.className = 'bg-white p-4 md:p-6 rounded-xl shadow-xl transition-all hover:shadow-2xl border-r-8 border-primary-indigo md:flex md:gap-6 items-start';
             
             const notesContent = clinic.notes ? 
@@ -454,44 +497,61 @@
             // --- Schedule Logic ---
             const uniqueId = `schedule-${clinicIndex}`;
             const fullScheduleText = clinic.schedule;
-            
-            // If displayMode is 'all', we show the full schedule text in both containers,
-            // and hide the toggle button to avoid confusion.
-            const isFullSchedule = displayMode === 'all';
+            const isFullScheduleDisplay = displayMode === 'all';
 
-            const initialScheduleText = isFullSchedule ? fullScheduleText : extractDaySchedule(fullScheduleText, displayMode);
+            // 1. Prepare Single-Day/Filtered Schedule Content (The default visible part)
+            const dayScheduleText = isFullScheduleDisplay ? fullScheduleText : extractDaySchedule(fullScheduleText, displayMode);
             
-            // Determine if the full schedule has more than what's being shown
-            // If we are already showing 'all', we don't need the button.
-            const showToggleButton = !isFullSchedule && isMultiDaySchedule(fullScheduleText, displayMode);
+            // 2. Prepare Detailed Weekly Schedule Content (The collapsible part)
+            const weeklyScheduleArray = parseScheduleToDays(fullScheduleText);
+            let weeklyScheduleHTML = `
+                <div class="weekly-schedule-grid text-sm border border-gray-300 rounded-lg overflow-hidden">
+                    <div class="grid-header">اليوم</div>
+                    <div class="grid-header">المواعيد</div>
+            `;
+            weeklyScheduleArray.forEach(item => {
+                weeklyScheduleHTML += `
+                    <div class="grid-day ${item.day === getCurrentDayInArabic() && !isFullScheduleDisplay ? 'bg-primary-teal text-white' : ''}">${item.day}</div>
+                    <div class="grid-time ${item.time.includes('لا يوجد') ? 'text-gray-500' : 'font-semibold'}">${item.time}</div>
+                `;
+            });
+            weeklyScheduleHTML += `</div>`;
+
+
+            // 3. Determine visibility and button text
+            const showToggleButton = !isFullScheduleDisplay && isMultiDaySchedule(fullScheduleText, displayMode);
             
-            // HTML for the schedule area
-            // Note: If isFullSchedule is true, day and full containers hold the same content (full schedule).
             const scheduleHTML = `
-                <div id="${uniqueId}-day" class="schedule-text text-md leading-relaxed p-2 bg-light-blue rounded-lg border-2 border-primary-teal custom-scroll overflow-x-auto whitespace-nowrap ${isFullSchedule ? '' : ''}">
-                    ${initialScheduleText}
+                <!-- Schedule displayed initially (Today's schedule or full string if filtered by specialty) -->
+                <div id="${uniqueId}-day" class="schedule-text text-md leading-relaxed p-2 bg-light-blue rounded-lg border-2 border-primary-teal custom-scroll overflow-x-auto whitespace-nowrap">
+                    ${dayScheduleText}
                 </div>
-                <div id="${uniqueId}-full" class="schedule-text text-md leading-relaxed p-2 bg-light-blue rounded-lg border-2 border-primary-teal custom-scroll overflow-x-auto whitespace-nowrap ${isFullSchedule ? 'hidden' : 'hidden'}">
-                    ${fullScheduleText}
+                <!-- Detailed Weekly Schedule (Hidden by default unless filtered by specialty) -->
+                <div id="${uniqueId}-full" class="p-2 ${isFullScheduleDisplay ? '' : 'hidden'}">
+                    <p class="text-sm font-semibold mb-2 text-gray-700">جدول الأسبوع التفصيلي:</p>
+                    ${weeklyScheduleHTML}
                 </div>
             `;
             
-            // The toggle button
-            const toggleButtonHTML = showToggleButton ? 
+            const finalToggleButtonHTML = showToggleButton ? 
                 `<button id="${uniqueId}-toggle" 
                     onclick="toggleFullSchedule('${uniqueId}')"
                     class="mt-2 text-sm font-semibold text-primary-indigo hover:text-primary-teal transition duration-150 focus:outline-none">
-                    إظهار باقي مواعيد الدكتور على مدار الأسبوع
+                    إظهار جدول المواعيد الأسبوعي المفصل
                 </button>` : '';
             
-            // If specialty filter is active, the toggle button is not needed/should be hidden.
-            const finalToggleButtonHTML = isFullSchedule ? '' : toggleButtonHTML;
+            // Ensure that if the specialty filter is active (isFullScheduleDisplay is true), we show the structured table directly.
+            if (isFullScheduleDisplay) {
+                // If the user filtered by specialty, the table is already in the '-full' block, and we hide the single-day block.
+                card.querySelector(`#${uniqueId}-day`)?.classList.add('hidden');
+                card.querySelector(`#${uniqueId}-full`)?.classList.remove('hidden');
+            }
+
 
             card.innerHTML = `
                 <!-- Specialty & Doctor Info (Left/Top) -->
                 <div class="md:w-1/3 flex-shrink-0 border-b md:border-b-0 md:border-l md:pl-6 pb-4 md:pb-0 mb-4 md:mb-0">
                     <p class="text-3xl mb-2">${clinic.emoji}</p>
-                    <!-- Added 'د. ' prefix here -->
                     <h3 class="text-xl md:text-2xl font-bold text-gray-800 leading-snug">د. ${clinic.doctor}</h3>
                     <p class="text-primary-teal font-semibold text-lg mt-1">${clinic.specialty}</p>
                     <div class="mt-3 text-lg font-bold text-accent-orange">
@@ -503,7 +563,7 @@
                 <div class="md:w-2/3">
                     <div class="flex items-center text-gray-700 mb-2">
                         <span class="text-2xl ml-2">🕒</span>
-                        <p class="font-medium">المواعيد:</p>
+                        <p class="font-medium">${isFullScheduleDisplay ? 'جدول المواعيد لجميع الأيام' : 'موعد اليوم المحدد:'}</p>
                     </div>
                     
                     ${scheduleHTML}
@@ -512,6 +572,32 @@
                     ${notesContent}
                 </div>
             `;
+
+            // Manually re-add the HTML structure to make sure script manipulation works
+            const scheduleContainer = card.querySelector('.md\\:w-2\\/3');
+            if (scheduleContainer) {
+                scheduleContainer.innerHTML = `<div class="flex items-center text-gray-700 mb-2">
+                        <span class="text-2xl ml-2">🕒</span>
+                        <p class="font-medium">${isFullScheduleDisplay ? 'جدول المواعيد لجميع الأيام' : 'موعد اليوم المحدد:'}</p>
+                    </div>
+                    ${scheduleHTML}
+                    ${finalToggleButtonHTML}
+                    ${notesContent}`;
+            }
+
+            // Correct initial display state based on filter
+            const dayEl = card.querySelector(`#${uniqueId}-day`);
+            const fullEl = card.querySelector(`#${uniqueId}-full`);
+            if (isFullScheduleDisplay) {
+                // If filtered by specialty, show the full detailed schedule directly and hide the single-day view.
+                dayEl.classList.add('hidden');
+                fullEl.classList.remove('hidden');
+            } else {
+                // If filtering by day, show the single-day view and hide the full detailed schedule.
+                dayEl.classList.remove('hidden');
+                fullEl.classList.add('hidden');
+            }
+            
             return card;
         }
 
