@@ -509,12 +509,22 @@
                     <div class="grid-header">اليوم</div>
                     <div class="grid-header">المواعيد</div>
             `;
-            weeklyScheduleArray.forEach(item => {
-                weeklyScheduleHTML += `
-                    <div class="grid-day ${item.day === getCurrentDayInArabic() && !isFullScheduleDisplay ? 'bg-primary-teal text-white' : ''}">${item.day}</div>
-                    <div class="grid-time ${item.time.includes('لا يوجد') ? 'text-gray-500' : 'font-semibold'}">${item.time}</div>
-                `;
-            });
+            
+            // Filter out days with "لا يوجد موعد." before rendering the grid
+            const availableDays = weeklyScheduleArray.filter(item => item.time !== 'لا يوجد موعد.');
+
+            if (availableDays.length > 0) {
+                availableDays.forEach(item => {
+                    weeklyScheduleHTML += `
+                        <div class="grid-day ${item.day === getCurrentDayInArabic() && !isFullScheduleDisplay ? 'bg-primary-teal text-white' : ''}">${item.day}</div>
+                        <div class="grid-time ${item.time.includes('لا يوجد') ? 'text-gray-500' : 'font-semibold'}">${item.time}</div>
+                    `;
+                });
+            } else {
+                 // Should not happen if filteredData is non-empty, but for safety:
+                 weeklyScheduleHTML += `<div class="col-span-2 text-center py-4 text-gray-500">لا يوجد مواعيد مسجلة لهذا الطبيب.</div>`;
+            }
+            
             weeklyScheduleHTML += `</div>`;
 
 
