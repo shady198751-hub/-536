@@ -303,6 +303,45 @@
         }
 
         /**
+         * Normalizes an Arabic string for search comparison:
+         * 1. Performs Unicode normalization (NFC).
+         * 2. Removes diacritics (Harakat).
+         * 3. Handles common Arabic character variations (Alif, Ta Marbuta, Ya).
+         * 4. Removes all non-alphabetic/numeric characters (including spaces, punctuation, titles).
+         */
+        function normalizeArabicSearch(str) {
+            if (!str) return '';
+            
+            let normalized = str;
+            
+            // 1. Convert to a standard Unicode form (NFC)
+            normalized = normalized.normalize("NFC");
+
+            // 2. Remove titles in parentheses and leading/trailing spaces
+            normalized = normalized.replace(/\s*\([^)]*\)\s*/g, '').trim();
+
+            // 3. Remove all Arabic diacritics (Harakat: Fatha, Kasra, Damma, Sukun, etc.)
+            normalized = normalized.replace(/[\u064B-\u0652]/g, "");
+
+            // 4. Normalize common Arabic character variations:
+            // Normalize Alif variations (أ, إ, آ) to simple Alif (ا)
+            normalized = normalized.replace(/[أإآ]/g, 'ا');
+            // Normalize Ta Marbuta (ة) to Ha (ه)
+            normalized = normalized.replace(/ة/g, 'ه');
+            // Normalize Ya (ى) to Alif Maksura (ي)
+            normalized = normalized.replace(/ى/g, 'ي');
+
+            // 5. Remove all non-alphabetic characters (including spaces, dots, and Arabic commas)
+            // This is the most aggressive step to ensure 'عبد الغفار' == 'عبدالغفار'
+            normalized = normalized.replace(/[\s.،`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, '');
+            
+            // Convert to lowercase (good practice, though Arabic case is mostly irrelevant)
+            normalized = normalized.toLowerCase();
+
+            return normalized;
+        }
+
+        /**
          * Parses the schedule string to convert it into a standardized array of day/time objects for all 7 days.
          * This function is crucial for the enhanced weekly display.
          * @param {string} fullSchedule - The complete schedule string (e.g., 'السبت، الإثنين، الثلاثاء: 3 م - 9 م، الأربعاء: 10 ص - 12 م').
@@ -359,7 +398,6 @@
 
         /**
          * Parses the full schedule string to isolate ONLY the schedule for the specified day.
-         * (Kept the original logic for backward compatibility with the single-day display)
          *
          * @param {string} fullSchedule - The complete schedule string.
          * @param {string} day - The Arabic name of the day (e.g., 'الأحد').
@@ -440,20 +478,39 @@
         }
         
         function filterSchedule() {
+            // Use the un-modified search term from the input field
+            const searchTerm = document.getElementById('doctor-search').value.trim(); 
+            
+            // Normalize the search term once for robust comparison
+            const normalizedSearchTerm = normalizeArabicSearch(searchTerm);
+
             const specialty = document.getElementById('specialty-filter').value;
-            const searchTerm = document.getElementById('doctor-search').value.toLowerCase().trim();
             const resultsContainer = document.getElementById('schedule-results');
             const noResults = document.getElementById('no-results');
             
-            // Determine which day filter to apply:
-            const dayFilterToApply = (specialty !== 'all') ? 'all' : getCurrentDayInArabic();
+            // --- CRITICAL FIX: Determine day filter based on search/specialty ---
+            let dayFilterToApply;
             
+            if (searchTerm !== '') {
+                // FIX: If user is searching by name, force 'all' days to find the doctor regardless of the current day.
+                dayFilterToApply = 'all'; 
+            } else if (specialty !== 'all') {
+                // If filtering by specialty but not searching, show all days for that specialty.
+                dayFilterToApply = 'all';
+            } else {
+                // Default: Filter by current day when no search term and no specialty is selected.
+                dayFilterToApply = getCurrentDayInArabic();
+            }
+            // -------------------------------------------------------------------
+
             // Update the day title to reflect the current filtering mode
             const dayTitle = document.getElementById('day-filter-title');
-            if (specialty !== 'all') {
+            if (searchTerm !== '') {
+                 dayTitle.textContent = `نتائج البحث عن ${searchTerm}: (كل أيام الأسبوع)`;
+            } else if (specialty !== 'all') {
                 dayTitle.textContent = `نتائج التصفية لتخصص ${specialty}: (كل أيام الأسبوع)`;
             } else {
-                dayTitle.textContent = `عيادات اليوم (${dayFilterToApply}):`;
+                dayTitle.textContent = `عيادات اليوم (${getCurrentDayInArabic()}):`;
             }
 
             let filteredData = clinicsData.filter(clinic => {
@@ -463,8 +520,14 @@
                 // Filter 2: Day of Week 
                 const dayMatch = hasDay(clinic.schedule, dayFilterToApply);
                 
-                // Filter 3: Doctor Name Search
-                const searchMatch = searchTerm === '' || clinic.doctor.toLowerCase().includes(searchTerm) || (`د. ${clinic.doctor}`).toLowerCase().includes(searchTerm);
+                // Filter 3: Doctor Name Search 
+                const doctorName = clinic.doctor; 
+                // Normalize the doctor name for comparison
+                const normalizedDoctorName = normalizeArabicSearch(doctorName);
+                
+                // Check if search term is empty OR if the normalized doctor name includes the normalized search term.
+                const searchMatch = searchTerm === '' || 
+                    normalizedDoctorName.includes(normalizedSearchTerm);
 
                 return specialtyMatch && dayMatch && searchMatch;
             });
@@ -478,7 +541,8 @@
                 noResults.classList.add('hidden');
                 
                 filteredData.forEach((clinic, index) => {
-                    const dayToShow = (specialty !== 'all') ? 'all' : getCurrentDayInArabic();
+                    // Determine if the card should initially show 'all' days (if searched or filtered by specialty)
+                    const dayToShow = (searchTerm !== '' || specialty !== 'all') ? 'all' : getCurrentDayInArabic();
                     const card = createClinicCard(clinic, dayToShow, index);
                     resultsContainer.appendChild(card);
                 });
@@ -497,6 +561,7 @@
             // --- Schedule Logic ---
             const uniqueId = `schedule-${clinicIndex}`;
             const fullScheduleText = clinic.schedule;
+            // The display mode is 'all' if filtering by specialty OR if searching by name
             const isFullScheduleDisplay = displayMode === 'all';
 
             // 1. Prepare Single-Day/Filtered Schedule Content (The default visible part)
@@ -515,9 +580,13 @@
 
             if (availableDays.length > 0) {
                 availableDays.forEach(item => {
+                    // Highlight the current day ONLY if we are NOT in full schedule mode (meaning we are viewing today's default list)
+                    const isToday = item.day === getCurrentDayInArabic();
+                    const highlightClass = isToday && !isFullScheduleDisplay ? 'bg-primary-teal text-white' : '';
+                    
                     weeklyScheduleHTML += `
-                        <div class="grid-day ${item.day === getCurrentDayInArabic() && !isFullScheduleDisplay ? 'bg-primary-teal text-white' : ''}">${item.day}</div>
-                        <div class="grid-time ${item.time.includes('لا يوجد') ? 'text-gray-500' : 'font-semibold'}">${item.time}</div>
+                        <div class="grid-day ${highlightClass}">${item.day}</div>
+                        <div class="grid-time ${highlightClass} ${item.time.includes('لا يوجد') ? 'text-gray-500' : 'font-semibold'}">${item.time}</div>
                     `;
                 });
             } else {
@@ -532,11 +601,11 @@
             const showToggleButton = !isFullScheduleDisplay && isMultiDaySchedule(fullScheduleText, displayMode);
             
             const scheduleHTML = `
-                <!-- Schedule displayed initially (Today's schedule or full string if filtered by specialty) -->
+                <!-- Schedule displayed initially (Today's schedule or full string if filtered by specialty/search) -->
                 <div id="${uniqueId}-day" class="schedule-text text-md leading-relaxed p-2 bg-light-blue rounded-lg border-2 border-primary-teal custom-scroll overflow-x-auto whitespace-nowrap">
                     ${dayScheduleText}
                 </div>
-                <!-- Detailed Weekly Schedule (Hidden by default unless filtered by specialty) -->
+                <!-- Detailed Weekly Schedule (Hidden by default unless filtered by specialty/search) -->
                 <div id="${uniqueId}-full" class="p-2 ${isFullScheduleDisplay ? '' : 'hidden'}">
                     <p class="text-sm font-semibold mb-2 text-gray-700">جدول الأسبوع التفصيلي:</p>
                     ${weeklyScheduleHTML}
@@ -550,12 +619,7 @@
                     إظهار جدول المواعيد الأسبوعي المفصل
                 </button>` : '';
             
-            // Ensure that if the specialty filter is active (isFullScheduleDisplay is true), we show the structured table directly.
-            if (isFullScheduleDisplay) {
-                // If the user filtered by specialty, the table is already in the '-full' block, and we hide the single-day block.
-                card.querySelector(`#${uniqueId}-day`)?.classList.add('hidden');
-                card.querySelector(`#${uniqueId}-full`)?.classList.remove('hidden');
-            }
+            const initialHeading = isFullScheduleDisplay ? 'جدول المواعيد لجميع الأيام' : 'موعد اليوم المحدد:';
 
 
             card.innerHTML = `
@@ -573,7 +637,7 @@
                 <div class="md:w-2/3">
                     <div class="flex items-center text-gray-700 mb-2">
                         <span class="text-2xl ml-2">🕒</span>
-                        <p class="font-medium">${isFullScheduleDisplay ? 'جدول المواعيد لجميع الأيام' : 'موعد اليوم المحدد:'}</p>
+                        <p class="font-medium">${initialHeading}</p>
                     </div>
                     
                     ${scheduleHTML}
@@ -583,29 +647,21 @@
                 </div>
             `;
 
-            // Manually re-add the HTML structure to make sure script manipulation works
-            const scheduleContainer = card.querySelector('.md\\:w-2\\/3');
-            if (scheduleContainer) {
-                scheduleContainer.innerHTML = `<div class="flex items-center text-gray-700 mb-2">
-                        <span class="text-2xl ml-2">🕒</span>
-                        <p class="font-medium">${isFullScheduleDisplay ? 'جدول المواعيد لجميع الأيام' : 'موعد اليوم المحدد:'}</p>
-                    </div>
-                    ${scheduleHTML}
-                    ${finalToggleButtonHTML}
-                    ${notesContent}`;
-            }
-
             // Correct initial display state based on filter
             const dayEl = card.querySelector(`#${uniqueId}-day`);
             const fullEl = card.querySelector(`#${uniqueId}-full`);
-            if (isFullScheduleDisplay) {
-                // If filtered by specialty, show the full detailed schedule directly and hide the single-day view.
-                dayEl.classList.add('hidden');
-                fullEl.classList.remove('hidden');
-            } else {
-                // If filtering by day, show the single-day view and hide the full detailed schedule.
-                dayEl.classList.remove('hidden');
-                fullEl.classList.add('hidden');
+
+            // We must re-select elements after setting innerHTML
+            if(dayEl && fullEl) {
+                if (isFullScheduleDisplay) {
+                    // If filtered by specialty or searching, show the full structured schedule
+                    dayEl.classList.add('hidden');
+                    fullEl.classList.remove('hidden');
+                } else {
+                    // If filtering by day, show the single-day view
+                    dayEl.classList.remove('hidden');
+                    fullEl.classList.add('hidden');
+                }
             }
             
             return card;
